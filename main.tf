@@ -4,13 +4,25 @@ provider "google" {
   zone    = var.zone_name
 }
 
+resource "google_compute_disk" "google-minecraft-disk" {
+  name  = "google-minecraft-disk"
+  type  = "pd-ssd"
+  zone  = var.region_name
+  size = "20"
+}
+
+resource "google_compute_attached_disk" "google-minecraft-disk" {
+  disk     = google_compute_disk.google-minecraft-disk.id
+  instance = google_compute_instance.vm_instance.id
+}
+
 resource "google_compute_firewall" "gh-9564-firewall-externalssh" {
   name    = "gh-9564-firewall-externalssh"
   network = "default"
 
   allow {
     protocol = "tcp"
-    ports    = ["22"]
+    ports    = ["22", "25565"]
   }
 
   source_ranges = ["0.0.0.0/0"]
@@ -27,10 +39,11 @@ resource "google_compute_instance" "vm_instance" {
     }
   }
   
-  scheduling {
-    preemptible = true
-    automatic_restart = false
-  }
+  # the below sets the instance to preemtible however we need to manage the disk state better...
+  # scheduling {
+  #  preemptible = true
+  #  automatic_restart = false
+  # }
 
   metadata = {
     ssh-keys = "${var.username}:${file(var.private_key_path)}"
@@ -43,7 +56,7 @@ resource "google_compute_instance" "vm_instance" {
     connection {
       type        = "ssh"
       user        = var.username
-      host = "${google_compute_instance.vm_instance.network_interface.0.access_config.0.nat_ip}"
+      host        = "${google_compute_instance.vm_instance.network_interface.0.access_config.0.nat_ip}"
       private_key = file(var.private_key_path)
     }
   }
