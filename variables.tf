@@ -19,7 +19,7 @@ variable "zone_name" {
 variable "machine_size" {
   type        = "string"
   description = "The size that this instance will be."
-  default     = "f1-micro"
+  default     = "n1-standard-1"
 }
 
 variable "image_name" {

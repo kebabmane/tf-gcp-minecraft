@@ -7,7 +7,7 @@ provider "google" {
 resource "google_compute_disk" "google-minecraft-disk" {
   name  = "google-minecraft-disk"
   type  = "pd-ssd"
-  zone  = var.region_name
+  zone  = var.zone_name
   size = "20"
 }
 
@@ -62,7 +62,7 @@ resource "google_compute_instance" "vm_instance" {
   }
 
   # Ensure firewall rule is provisioned before server, so that SSH doesn't fail.
-  depends_on = ["google_compute_firewall.gh-9564-firewall-externalssh"]
+  depends_on = ["google_compute_firewall.gh-9564-firewall-externalssh", "google_compute_disk.google-minecraft-disk"]
 
   network_interface {
     network = "default"
