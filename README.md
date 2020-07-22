@@ -35,6 +35,6 @@ Once the file is downloaded you need to set an env var to use it
 
 # TODO
 
-[] make sure that when downloading the minecraft jar we always get the latest, it's hard coded right now
-[] setup the functions to start, stop, backup and request public IP 
-[] allow for association of a domain to the public ip address to make it easier to connect (rather then through IP)
+- [ ] make sure that when downloading the minecraft jar we always get the latest, it's hard coded right now
+- [ ] setup the functions to start, stop, backup and request public IP 
+- [ ] allow for association of a domain to the public ip address to make it easier to connect (rather then through IP)
