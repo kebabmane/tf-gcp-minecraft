@@ -4,9 +4,17 @@ provider "google" {
   zone    = var.zone_name
 }
 
-resource "google_compute_network" "vpc_network" {
-  name                    = "terraform-network"
-  auto_create_subnetworks = "true"
+resource "google_compute_firewall" "gh-9564-firewall-externalssh" {
+  name    = "gh-9564-firewall-externalssh"
+  network = "default"
+
+  allow {
+    protocol = "tcp"
+    ports    = ["22"]
+  }
+
+  source_ranges = ["0.0.0.0/0"]
+  target_tags   = ["externalssh"]
 }
 
 resource "google_compute_instance" "vm_instance" {
@@ -23,7 +31,10 @@ resource "google_compute_instance" "vm_instance" {
     preemptible = true
     automatic_restart = false
   }
-  
+
+  metadata = {
+    ssh-keys = "${var.username}:${file(var.private_key_path)}"
+  }
 
   # We connect to our instance via Terraform and remotely executes our script using SSH
   provisioner "remote-exec" {
@@ -31,21 +42,20 @@ resource "google_compute_instance" "vm_instance" {
 
     connection {
       type        = "ssh"
-      host        = google_compute_address.static.address
       user        = var.username
+      host = "${google_compute_instance.vm_instance.network_interface.0.access_config.0.nat_ip}"
       private_key = file(var.private_key_path)
     }
   }
 
+  # Ensure firewall rule is provisioned before server, so that SSH doesn't fail.
+  depends_on = ["google_compute_firewall.gh-9564-firewall-externalssh"]
+
   network_interface {
-    # A default network is created for all GCP projects
-    network = google_compute_network.vpc_network.self_link
+    network = "default"
+
     access_config {
+      # Ephemeral
     }
   }
-}
-
-# We create a public IP address for our google compute instance to utilize
-resource "google_compute_address" "static" {
-  name = "vm-public-address"
 }
